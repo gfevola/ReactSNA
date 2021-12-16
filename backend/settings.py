@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-15#&+q71lx4uj^+$1t0k1(^j+!b1v@1vqilr0t10b3hodxpzyb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['growthnet.pythonanywhere.com']
 
 
 # Application definition
@@ -86,12 +86,23 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'growthnet$db1',
+        'USER': 'growthnet',
+        'PASSWORD':'taken041!',
+        'HOST': 'growthnet.mysql.pythonanywhere-services.com',
     }
 }
+
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
