@@ -24,6 +24,7 @@ Jinja2==3.0.2
 joblib==1.1.0
 keras==2.7.0
 MarkupSafe==2.0.1
+mysqlclient==2.1.0
 networkx==2.6.3
 nltk==3.6.5
 node2vec==0.4.4

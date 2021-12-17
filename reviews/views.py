@@ -63,6 +63,17 @@ class DeleteModelsPost(APIView):
         #serializer_class = ReviewModelOnlySerializer(queryset, many=True)
         return Response({})  
  
+
+class ReviewDataImport(APIView):
+
+    permission_classes = (permissions.AllowAny, )
+
+    def post(self, request, format=None):
+        data = self.request.data
+        print(data)   
+        print(request.FILES)
+        UploadReviews(request, data['reviewFile'], data['modelname'] )
+        return Response({'note':'imported successfully'})
  
 #----------------------------------------------------
 def ReviewTemplate(request):
@@ -81,6 +92,8 @@ def ReviewTemplate(request):
 #--upload function
 def UploadReviews(request,file,modelName):
     
+    print(file.name)
+    print(modelName)
     newfile = Document(docfile = file)
     newfile.save()
     
