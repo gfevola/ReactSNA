@@ -24,3 +24,29 @@ class DataViewPost(APIView):
         queryset = EmpData.objects.filter(location=data['location'])    
         serializer_class = DataSerializer(queryset, many=True)
         return Response(serializer_class.data)    
+        
+#this is not working
+class DataUpload(APIView):
+    permission_classes = (permissions.AllowAny, )
+
+    def post(self, request, format=None):
+        data = request.FILES['datafile']
+        UploadData(data)
+        return Response({'note':'imported successfully'})
+
+
+def UploadData(file):
+
+    newfile = Document(docfile = file)
+    newfile.save()
+    path = settings.MEDIA_ROOT.replace("\\","/") + "/" + str(newfile.docfile)
+    DataFile = pd.read_excel(path)   
+    
+    for index, row in DataFile.iterrows():
+        foo = EmpData(
+             name = row['Name'],
+             empid = row['EmpID'],
+             location = row['Location']
+        )
+        foo.save()    
+ 

@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework import permissions
 from rest_framework.response import Response
 
-from data.models import Document
+from data.models import Document, EmpData
 from .serializers import ReviewModelSerializer, ReviewModelOnlySerializer, ReviewModelBG_Serializer
 
 import pandas as pd
@@ -70,10 +70,36 @@ class ReviewDataImport(APIView):
 
     def post(self, request, format=None):
         data = self.request.data
+        print('this is the review post')
         print(data)   
         print(request.FILES)
         UploadReviews(request, data['reviewFile'], data['modelname'] )
         return Response({'note':'imported successfully'})
+
+###this is working
+class DataUpload1(APIView):
+    permission_classes = (permissions.AllowAny, )
+
+    def post(self, request, format=None):
+        data = request.FILES['datafile']
+        UploadData(data)
+        return Response({'note':'imported successfully'})
+
+
+def UploadData(file):
+
+    newfile = Document(docfile = file)
+    newfile.save()
+    path = settings.MEDIA_ROOT.replace("\\","/") + "/" + str(newfile.docfile)
+    DataFile = pd.read_excel(path)   
+    
+    for index, row in DataFile.iterrows():
+        foo = EmpData(
+             name = row['Name'],
+             empid = row['EmpID'],
+             location = row['Location']
+        )
+        foo.save()    
  
 #----------------------------------------------------
 def ReviewTemplate(request):
@@ -92,8 +118,6 @@ def ReviewTemplate(request):
 #--upload function
 def UploadReviews(request,file,modelName):
     
-    print(file.name)
-    print(modelName)
     newfile = Document(docfile = file)
     newfile.save()
     
