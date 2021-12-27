@@ -1,8 +1,8 @@
 #completeversion/data/urls
 from rest_framework import routers
 from django.urls import path, include
-from .views import ReviewViewPost, ReviewTemplate, ReviewModelsPost, ReviewModelBigram_View, DeleteModelsPost, ReviewDataImport, DataUpload1
-
+from .views import ReviewViewPost, ReviewModelsPost, ReviewModelBigram_View, DeleteModelsPost, ReviewDataImport, DataUpload1
+#from .views import ReviewTemplate
 
 #router = routers.DefaultRouter()
 #router.register(r'models',ReviewModelsPost,'model')

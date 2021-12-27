@@ -1,5 +1,5 @@
 
-def PrepareReviews(data, descColName):
+def PrepareReviews(data, descField):
    
     import numpy as np
     import pandas as pd
@@ -7,11 +7,15 @@ def PrepareReviews(data, descColName):
     from nltk.corpus import stopwords
     from nltk.stem import WordNetLemmatizer
     from nltk.tokenize import RegexpTokenizer
-
+    import random
+    
+    nltk.download('stopwords')
+    nltk.download('wordnet')
+    nltk.download('averaged_perceptron_tagger')
+    
     tokenizer = RegexpTokenizer(r'\w+')
     lemmatizer = WordNetLemmatizer()
     stop_words = set(stopwords.words('english'))
-
 
     def parse_term(d):
         if pd.isna(d):
@@ -25,7 +29,7 @@ def PrepareReviews(data, descColName):
 
     def filter_pos_tag(d):
         p = pd.DataFrame(d)
-        return p[~p[1].isin(["PRP","DT","CD"])]
+        return p[~p[1].isin(["PRP","DT","CD","CC","PDT"])]
         
     def pos_calculate(d,cols):
         p = pd.DataFrame(d)
@@ -40,9 +44,10 @@ def PrepareReviews(data, descColName):
         return termsdf
     
     cols=['Term1','Term2','Distance']
-    data['Patterns'] = data[descColName].apply(lambda x: parse_term(x))
+    data['Patterns'] = data[descField].apply(lambda x: parse_term(x))
     data['POS'] = data['Patterns'].apply(lambda x: apply_pos_tag(x))
     data['POS_filt'] = data['POS'].apply(lambda x: filter_pos_tag(x))
     data['XTerms'] = data['POS_filt'].apply(lambda x: pos_calculate(x, cols))
+    data['UniqueID'] = [f'{i}_{random.randrange(16**7):x}' for i in range(len(data))]
     
     return data

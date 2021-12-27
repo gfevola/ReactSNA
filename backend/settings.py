@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-15#&+q71lx4uj^+$1t0k1(^j+!b1v@1vqilr0t10b3hodxpzyb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+#ALLOWED_HOSTS = ['growthnet.pythonanywhere.com']
 
 
 # Application definition
@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'accounts',
     'data',
     'reviews',
+    'employee'
 ]
 
 MIDDLEWARE = [

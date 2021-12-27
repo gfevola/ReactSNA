@@ -2,7 +2,7 @@
 from django.shortcuts import render
 from django.conf import settings
 from django.contrib import messages
-from .models import ReviewModel, Review, ReviewBigrams
+from .models import ReviewModel, Review, ReviewBigrams, WordScores
 from rest_framework.views import APIView
 from rest_framework import permissions
 from rest_framework.response import Response
@@ -17,6 +17,7 @@ sys.path.insert(0, './reviews/pythonscripts')
 import Bigrams_from_Reviews as bg
 import Review_Topics as rt
 import Prepare_Reviews_NLTK as pr
+import Review_Description_Sentiment_Analysis as ds
 
 
 class ReviewViewPost(APIView):
@@ -25,6 +26,7 @@ class ReviewViewPost(APIView):
     
     def post(self, request, format=None):
         data = self.request.data
+        print('reviewmodel')
         queryset = ReviewModel.objects.filter(ModelKey=data['modelname'])    
         serializer_class = ReviewModelSerializer(queryset, many=True)
         return Response(serializer_class.data)  
@@ -59,8 +61,6 @@ class DeleteModelsPost(APIView):
         data = self.request.data
         queryset1 = ReviewModel.objects.filter(ModelKey=data['modelname'])
         queryset1.delete()
-        #queryset1 = 
-        #serializer_class = ReviewModelOnlySerializer(queryset, many=True)
         return Response({})  
  
 
@@ -70,9 +70,6 @@ class ReviewDataImport(APIView):
 
     def post(self, request, format=None):
         data = self.request.data
-        print('this is the review post')
-        print(data)   
-        print(request.FILES)
         UploadReviews(request, data['reviewFile'], data['modelname'] )
         return Response({'note':'imported successfully'})
 
@@ -87,7 +84,6 @@ class DataUpload1(APIView):
 
 
 def UploadData(file):
-
     newfile = Document(docfile = file)
     newfile.save()
     path = settings.MEDIA_ROOT.replace("\\","/") + "/" + str(newfile.docfile)
@@ -102,18 +98,18 @@ def UploadData(file):
         foo.save()    
  
 #----------------------------------------------------
-def ReviewTemplate(request):
-#template view - upload reviews
-    context = {}
-    if request.method == 'POST':
-        filename = request.FILES['reviewFile']
-        modelName = request.POST['modelname']
+# def ReviewTemplate(request):
+# #template view - upload reviews
+    # context = {}
+    # if request.method == 'POST':
+        # filename = request.FILES['reviewFile']
+        # modelName = request.POST['modelname']
         
-        UploadReviews(request, filename,modelName)
+        # UploadReviews(request, filename,modelName)
     
-    return render(request,
-                'reviews/upload.html',context
-           )
+    # return render(request,
+                # 'reviews/upload.html',context
+           # )
 
 #--upload function
 def UploadReviews(request,file,modelName):
@@ -140,12 +136,14 @@ def UploadReviews(request,file,modelName):
     model = ReviewModel.objects.get(ModelKey = modelName)
 
     #converted description to bigrams (for graph)
-    dataprep = pr.PrepareReviews(DataFile,"Text")
-    bigramdata = bg.BigramCreate(dataprep,"ProductId","Score")
-    [ReviewDataTopic, BigramDataTopic] = rt.TopicCreate(dataprep, bigramdata)  
+    Reviews = pr.PrepareReviews(DataFile,"Text")
+    Bigrams = bg.BigramCreate(Reviews,"ProductId","Score")
+    [Reviews, Bigrams, WordTopics] = rt.TopicCreate(Reviews, Bigrams)  
+    [Reviews, WordSentiment] = ds.DescriptionSentiment(Reviews, "Text","Score")
     
+    WordDF = pd.merge(WordSentiment,WordTopics,left_on="Term",right_on="Term",how="inner")
     
-    for index, row in bigramdata.iterrows():
+    for index, row in Bigrams.iterrows():
         foo = ReviewBigrams(
                 ModelKey = model,
                 Bigram_Term1 = row['Term1'],
@@ -160,21 +158,37 @@ def UploadReviews(request,file,modelName):
         foo.save()
     print('Completed Bigrams Upload')
 
-    
-    #sample amazon reviews file
-    for index, row in ReviewDataTopic.iterrows():
+    #reviews file
+    for index, row in Reviews.iterrows():
         foo = Review(
                 ModelKey = model,
+                ReviewID = row['UniqueID'],
                 ReviewItem = row['ProductId'],
                 Summary = row['Summary'],
                 Description = row['Text'],
                 Rating = row['Score'],
                 Topic = row['Topic'],
-                TopicScore = row['TopicScore']
+                TopicScore = row['TopicScore'],
+                Rating_Estimate = row['EstimatedSentiment'],
+                SentimentTrend = row['SentimentString'],
+                WordTrend = row['Wordlist']
         )
         foo.save()
+        
     print('Completed Reviews Upload')
     messages.success(request,f'Uploaded Reviews Successfully')
-    
 
+    #word scores
+    for index, row in WordDF.iterrows():
+        foo = WordScores(
+            ModelKey = model,
+            Word = row['Term'],
+            WScore = row['SentimentScore'],
+            POS_Tag = row['POS_Tag'],
+            WTopicNum = row['Topic'],
+            WTopicScore = row['TopicScore']
+        )
+        foo.save()
+    print('Completed Words Upload')
+    
     return({'fieldNames': DataFile.columns})

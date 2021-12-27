@@ -63,4 +63,10 @@ def TopicCreate(reviewdata,bigramdata, ntopic=20):
     comp = [term_distance(piv,rw['indexA'],rw['indexB']) for i, rw in bigramdata_mg.iterrows()]
     bigramdata_mg['TopicDist'] = comp
 
-    return [reviewdata, bigramdata_mg]
+    dictterms = pd.concat([dictterms,termscores],axis=1)
+    dictterms['TopicScore'] =dictterms['TopicScore'].apply(lambda x: np.round(x,4))
+    
+    reviewdata['TopicScore'] = reviewdata['TopicScore'].apply(lambda x: np.round(x,4))
+    
+    
+    return [reviewdata, bigramdata_mg, dictterms]
